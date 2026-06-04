@@ -1,0 +1,418 @@
+
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: var(--font-sans); }
+
+  .app { max-width: 420px; margin: 0 auto; padding: 1rem; }
+
+  .header { text-align: center; padding: 1.5rem 0 1rem; }
+  .header h1 { font-size: 22px; font-weight: 500; color: var(--color-text-primary); letter-spacing: -0.5px; }
+  .header p { font-size: 13px; color: var(--color-text-secondary); margin-top: 4px; }
+
+  .date-bar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem; }
+  .date-bar span { font-size: 14px; font-weight: 500; color: var(--color-text-primary); }
+  .date-nav { background: none; border: 0.5px solid var(--color-border-tertiary); border-radius: var(--border-radius-md); padding: 4px 10px; cursor: pointer; font-size: 13px; color: var(--color-text-secondary); }
+  .date-nav:hover { background: var(--color-background-secondary); }
+
+  .macro-cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 1rem; }
+  .macro-card { background: var(--color-background-secondary); border-radius: var(--border-radius-md); padding: 12px 10px; text-align: center; }
+  .macro-card .label { font-size: 11px; color: var(--color-text-secondary); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; }
+  .macro-card .value { font-size: 20px; font-weight: 500; }
+  .macro-card .goal { font-size: 11px; color: var(--color-text-tertiary); margin-top: 2px; }
+  .prot-val { color: #E24B4A; }
+  .carb-val { color: #BA7517; }
+  .fat-val { color: #185FA5; }
+
+  .progress-bars { background: var(--color-background-primary); border: 0.5px solid var(--color-border-tertiary); border-radius: var(--border-radius-lg); padding: 1rem 1.25rem; margin-bottom: 1rem; }
+  .prog-row { margin-bottom: 10px; }
+  .prog-row:last-child { margin-bottom: 0; }
+  .prog-label { display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 4px; }
+  .prog-label span:first-child { color: var(--color-text-secondary); }
+  .prog-label span:last-child { color: var(--color-text-primary); font-weight: 500; }
+  .prog-track { height: 6px; background: var(--color-background-secondary); border-radius: 3px; overflow: hidden; }
+  .prog-fill { height: 100%; border-radius: 3px; transition: width 0.5s ease; }
+  .prot-fill { background: #E24B4A; }
+  .carb-fill { background: #BA7517; }
+  .fat-fill { background: #185FA5; }
+  .cal-fill { background: #1D9E75; }
+
+  .add-section { background: var(--color-background-primary); border: 0.5px solid var(--color-border-tertiary); border-radius: var(--border-radius-lg); padding: 1rem 1.25rem; margin-bottom: 1rem; }
+  .add-section h3 { font-size: 14px; font-weight: 500; margin-bottom: 12px; color: var(--color-text-primary); }
+  .input-row { display: flex; gap: 8px; margin-bottom: 8px; }
+  .input-row input { flex: 1; font-size: 14px; padding: 8px 10px; border: 0.5px solid var(--color-border-tertiary); border-radius: var(--border-radius-md); background: var(--color-background-secondary); color: var(--color-text-primary); }
+  .input-row input:focus { outline: none; border-color: var(--color-border-primary); }
+  .meal-select { width: 100%; font-size: 13px; padding: 7px 10px; border: 0.5px solid var(--color-border-tertiary); border-radius: var(--border-radius-md); background: var(--color-background-secondary); color: var(--color-text-primary); margin-bottom: 8px; }
+  .add-btn { width: 100%; padding: 10px; background: #1D9E75; color: white; border: none; border-radius: var(--border-radius-md); font-size: 14px; font-weight: 500; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; }
+  .add-btn:hover { background: #0F6E56; }
+  .add-btn:disabled { background: var(--color-background-secondary); color: var(--color-text-tertiary); cursor: not-allowed; }
+
+  .ai-status { font-size: 12px; color: var(--color-text-secondary); text-align: center; margin-top: 6px; min-height: 16px; }
+  .ai-status.loading { color: #BA7517; }
+  .ai-status.success { color: #1D9E75; }
+  .ai-status.error { color: #E24B4A; }
+
+  .meals-section { background: var(--color-background-primary); border: 0.5px solid var(--color-border-tertiary); border-radius: var(--border-radius-lg); padding: 1rem 1.25rem; margin-bottom: 1rem; }
+  .meals-section h3 { font-size: 14px; font-weight: 500; margin-bottom: 12px; color: var(--color-text-primary); }
+  .meal-group { margin-bottom: 12px; }
+  .meal-group:last-child { margin-bottom: 0; }
+  .meal-group-title { font-size: 11px; font-weight: 500; color: var(--color-text-secondary); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; padding-bottom: 4px; border-bottom: 0.5px solid var(--color-border-tertiary); }
+  .food-item { display: flex; align-items: center; justify-content: space-between; padding: 6px 0; }
+  .food-info { flex: 1; }
+  .food-name { font-size: 13px; font-weight: 500; color: var(--color-text-primary); }
+  .food-macros { font-size: 11px; color: var(--color-text-secondary); margin-top: 1px; }
+  .del-btn { background: none; border: none; cursor: pointer; color: var(--color-text-tertiary); font-size: 14px; padding: 2px 6px; border-radius: 4px; }
+  .del-btn:hover { background: var(--color-background-secondary); color: #E24B4A; }
+  .empty-msg { font-size: 13px; color: var(--color-text-tertiary); text-align: center; padding: 12px 0; }
+
+  .goals-section { background: var(--color-background-primary); border: 0.5px solid var(--color-border-tertiary); border-radius: var(--border-radius-lg); padding: 1rem 1.25rem; }
+  .goals-section h3 { font-size: 14px; font-weight: 500; margin-bottom: 12px; color: var(--color-text-primary); display: flex; align-items: center; justify-content: space-between; }
+  .edit-goals-btn { font-size: 12px; font-weight: 400; color: #185FA5; background: none; border: none; cursor: pointer; }
+  .goals-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .goal-input-group label { font-size: 11px; color: var(--color-text-secondary); display: block; margin-bottom: 3px; }
+  .goal-input-group input { width: 100%; font-size: 14px; padding: 7px 10px; border: 0.5px solid var(--color-border-tertiary); border-radius: var(--border-radius-md); background: var(--color-background-secondary); color: var(--color-text-primary); }
+  .save-goals-btn { width: 100%; margin-top: 10px; padding: 9px; background: none; border: 0.5px solid var(--color-border-secondary); border-radius: var(--border-radius-md); font-size: 13px; cursor: pointer; color: var(--color-text-primary); }
+  .save-goals-btn:hover { background: var(--color-background-secondary); }
+  .goals-display { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+  .goal-stat { text-align: center; }
+  .goal-stat .gs-val { font-size: 16px; font-weight: 500; color: var(--color-text-primary); }
+  .goal-stat .gs-lbl { font-size: 10px; color: var(--color-text-secondary); }
+
+  .tabs { display: flex; gap: 6px; margin-bottom: 1rem; }
+  .tab { flex: 1; padding: 8px; background: none; border: 0.5px solid var(--color-border-tertiary); border-radius: var(--border-radius-md); font-size: 13px; cursor: pointer; color: var(--color-text-secondary); }
+  .tab.active { background: var(--color-background-secondary); color: var(--color-text-primary); font-weight: 500; border-color: var(--color-border-secondary); }
+</style>
+
+<div class="app">
+  <div class="header">
+    <h1><i class="ti ti-salad" aria-hidden="true" style="font-size:20px; vertical-align:-2px; margin-right:6px; color:#1D9E75"></i>MacroTrack</h1>
+    <p>Acompanhe seus macros diários</p>
+  </div>
+
+  <div class="tabs">
+    <button class="tab active" onclick="showTab('today')">Hoje</button>
+    <button class="tab" onclick="showTab('history')">Histórico</button>
+    <button class="tab" onclick="showTab('goals')">Metas</button>
+  </div>
+
+  <div id="tab-today">
+    <div class="date-bar">
+      <button class="date-nav" onclick="changeDay(-1)"><i class="ti ti-chevron-left"></i></button>
+      <span id="date-label">Hoje</span>
+      <button class="date-nav" onclick="changeDay(1)"><i class="ti ti-chevron-right"></i></button>
+    </div>
+
+    <div class="macro-cards">
+      <div class="macro-card">
+        <div class="label">Proteína</div>
+        <div class="value prot-val" id="total-prot">0g</div>
+        <div class="goal" id="goal-prot-lbl">/ 150g</div>
+      </div>
+      <div class="macro-card">
+        <div class="label">Carbo</div>
+        <div class="value carb-val" id="total-carb">0g</div>
+        <div class="goal" id="goal-carb-lbl">/ 250g</div>
+      </div>
+      <div class="macro-card">
+        <div class="label">Gordura</div>
+        <div class="value fat-val" id="total-fat">0g</div>
+        <div class="goal" id="goal-fat-lbl">/ 70g</div>
+      </div>
+    </div>
+
+    <div class="progress-bars">
+      <div class="prog-row">
+        <div class="prog-label"><span>Calorias</span><span id="cal-prog-lbl">0 / 2000 kcal</span></div>
+        <div class="prog-track"><div class="prog-fill cal-fill" id="cal-bar" style="width:0%"></div></div>
+      </div>
+      <div class="prog-row">
+        <div class="prog-label"><span>Proteína</span><span id="prot-prog-lbl">0%</span></div>
+        <div class="prog-track"><div class="prog-fill prot-fill" id="prot-bar" style="width:0%"></div></div>
+      </div>
+      <div class="prog-row">
+        <div class="prog-label"><span>Carboidrato</span><span id="carb-prog-lbl">0%</span></div>
+        <div class="prog-track"><div class="prog-fill carb-fill" id="carb-bar" style="width:0%"></div></div>
+      </div>
+      <div class="prog-row">
+        <div class="prog-label"><span>Gordura</span><span id="fat-prog-lbl">0%</span></div>
+        <div class="prog-track"><div class="prog-fill fat-fill" id="fat-bar" style="width:0%"></div></div>
+      </div>
+    </div>
+
+    <div class="add-section">
+      <h3><i class="ti ti-plus" aria-hidden="true" style="margin-right:4px"></i>Adicionar alimento</h3>
+      <select class="meal-select" id="meal-type">
+        <option value="Café da manhã">☀️ Café da manhã</option>
+        <option value="Almoço">🍽️ Almoço</option>
+        <option value="Lanche">🥪 Lanche</option>
+        <option value="Jantar">🌙 Jantar</option>
+        <option value="Suplemento">💊 Suplemento</option>
+      </select>
+      <div class="input-row">
+        <input type="text" id="food-input" placeholder="Ex: frango grelhado 150g" />
+      </div>
+      <button class="add-btn" id="add-btn" onclick="addFood()">
+        <i class="ti ti-sparkles" aria-hidden="true"></i> Analisar com IA
+      </button>
+      <div class="ai-status" id="ai-status"></div>
+    </div>
+
+    <div class="meals-section" id="meals-section">
+      <h3>Refeições do dia</h3>
+      <div id="meals-list"><p class="empty-msg">Nenhum alimento adicionado ainda</p></div>
+    </div>
+  </div>
+
+  <div id="tab-history" style="display:none">
+    <div id="history-content"></div>
+  </div>
+
+  <div id="tab-goals" style="display:none">
+    <div class="goals-section">
+      <h3>Metas diárias <button class="edit-goals-btn" onclick="toggleGoalsEdit()">editar</button></h3>
+      <div id="goals-view" class="goals-display">
+        <div class="goal-stat"><div class="gs-val" id="g-cal">2000</div><div class="gs-lbl">kcal</div></div>
+        <div class="goal-stat"><div class="gs-val prot-val" id="g-prot">150g</div><div class="gs-lbl">proteína</div></div>
+        <div class="goal-stat"><div class="gs-val carb-val" id="g-carb">250g</div><div class="gs-lbl">carbo</div></div>
+        <div class="goal-stat"><div class="gs-val fat-val" id="g-fat">70g</div><div class="gs-lbl">gordura</div></div>
+      </div>
+      <div id="goals-edit" style="display:none">
+        <div class="goals-grid">
+          <div class="goal-input-group"><label>Calorias (kcal)</label><input type="number" id="gi-cal" value="2000"></div>
+          <div class="goal-input-group"><label>Proteína (g)</label><input type="number" id="gi-prot" value="150"></div>
+          <div class="goal-input-group"><label>Carboidrato (g)</label><input type="number" id="gi-carb" value="250"></div>
+          <div class="goal-input-group"><label>Gordura (g)</label><input type="number" id="gi-fat" value="70"></div>
+        </div>
+        <button class="save-goals-btn" onclick="saveGoals()"><i class="ti ti-check" style="margin-right:4px"></i>Salvar metas</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+let currentOffset = 0;
+let allDays = {};
+let goals = { cal: 2000, prot: 150, carb: 250, fat: 70 };
+
+function getDateKey(offset) {
+  const d = new Date();
+  d.setDate(d.getDate() + offset);
+  return d.toISOString().split('T')[0];
+}
+
+function getDateLabel(offset) {
+  if (offset === 0) return 'Hoje';
+  if (offset === -1) return 'Ontem';
+  const d = new Date();
+  d.setDate(d.getDate() + offset);
+  return d.toLocaleDateString('pt-BR', { weekday: 'short', day: 'numeric', month: 'short' });
+}
+
+function getCurrentFoods() {
+  const key = getDateKey(currentOffset);
+  return allDays[key] || [];
+}
+
+function setCurrentFoods(foods) {
+  const key = getDateKey(currentOffset);
+  allDays[key] = foods;
+}
+
+function changeDay(delta) {
+  currentOffset = Math.min(0, currentOffset + delta);
+  document.getElementById('date-label').textContent = getDateLabel(currentOffset);
+  renderMeals();
+  updateTotals();
+}
+
+function showTab(tab) {
+  ['today','history','goals'].forEach(t => {
+    document.getElementById('tab-'+t).style.display = t === tab ? '' : 'none';
+    document.querySelectorAll('.tab')[['today','history','goals'].indexOf(t)].classList.toggle('active', t === tab);
+  });
+  if (tab === 'history') renderHistory();
+}
+
+function updateTotals() {
+  const foods = getCurrentFoods();
+  const totals = foods.reduce((acc, f) => ({
+    prot: acc.prot + f.prot,
+    carb: acc.carb + f.carb,
+    fat: acc.fat + f.fat,
+    cal: acc.cal + f.cal
+  }), { prot: 0, carb: 0, fat: 0, cal: 0 });
+
+  document.getElementById('total-prot').textContent = Math.round(totals.prot) + 'g';
+  document.getElementById('total-carb').textContent = Math.round(totals.carb) + 'g';
+  document.getElementById('total-fat').textContent = Math.round(totals.fat) + 'g';
+  document.getElementById('goal-prot-lbl').textContent = '/ ' + goals.prot + 'g';
+  document.getElementById('goal-carb-lbl').textContent = '/ ' + goals.carb + 'g';
+  document.getElementById('goal-fat-lbl').textContent = '/ ' + goals.fat + 'g';
+
+  const pct = (v, g) => Math.min(100, Math.round((v / g) * 100));
+  document.getElementById('cal-bar').style.width = pct(totals.cal, goals.cal) + '%';
+  document.getElementById('prot-bar').style.width = pct(totals.prot, goals.prot) + '%';
+  document.getElementById('carb-bar').style.width = pct(totals.carb, goals.carb) + '%';
+  document.getElementById('fat-bar').style.width = pct(totals.fat, goals.fat) + '%';
+  document.getElementById('cal-prog-lbl').textContent = Math.round(totals.cal) + ' / ' + goals.cal + ' kcal';
+  document.getElementById('prot-prog-lbl').textContent = pct(totals.prot, goals.prot) + '%';
+  document.getElementById('carb-prog-lbl').textContent = pct(totals.carb, goals.carb) + '%';
+  document.getElementById('fat-prog-lbl').textContent = pct(totals.fat, goals.fat) + '%';
+}
+
+function renderMeals() {
+  const foods = getCurrentFoods();
+  const list = document.getElementById('meals-list');
+  if (foods.length === 0) {
+    list.innerHTML = '<p class="empty-msg">Nenhum alimento adicionado ainda</p>';
+    return;
+  }
+  const groups = {};
+  foods.forEach((f, i) => {
+    if (!groups[f.meal]) groups[f.meal] = [];
+    groups[f.meal].push({ ...f, idx: i });
+  });
+  list.innerHTML = Object.entries(groups).map(([meal, items]) => `
+    <div class="meal-group">
+      <div class="meal-group-title">${meal}</div>
+      ${items.map(f => `
+        <div class="food-item">
+          <div class="food-info">
+            <div class="food-name">${f.name}</div>
+            <div class="food-macros">P: ${Math.round(f.prot)}g · C: ${Math.round(f.carb)}g · G: ${Math.round(f.fat)}g · ${Math.round(f.cal)} kcal</div>
+          </div>
+          <button class="del-btn" onclick="removeFood(${f.idx})" aria-label="Remover"><i class="ti ti-trash"></i></button>
+        </div>
+      `).join('')}
+    </div>
+  `).join('');
+}
+
+function removeFood(idx) {
+  const foods = getCurrentFoods();
+  foods.splice(idx, 1);
+  setCurrentFoods(foods);
+  renderMeals();
+  updateTotals();
+}
+
+async function addFood() {
+  const input = document.getElementById('food-input');
+  const meal = document.getElementById('meal-type').value;
+  const text = input.value.trim();
+  if (!text) return;
+
+  const btn = document.getElementById('add-btn');
+  const status = document.getElementById('ai-status');
+  btn.disabled = true;
+  status.textContent = 'Analisando com IA...';
+  status.className = 'ai-status loading';
+
+  try {
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 300,
+        messages: [{
+          role: 'user',
+          content: `Analise o alimento/refeição descrito e retorne SOMENTE um JSON válido, sem texto extra, sem markdown, sem explicações. Formato exato:
+{"name":"nome formatado","prot":0,"carb":0,"fat":0,"cal":0}
+
+Alimento: "${text}"
+
+Regras:
+- name: nome curto e formatado em português
+- prot, carb, fat: gramas (números decimais)
+- cal: calorias totais (número inteiro)
+- Use valores nutricionais reais e precisos
+- Se houver quantidade (ex: 150g), calcule para essa quantidade`
+        }]
+      })
+    });
+
+    const data = await response.json();
+    const rawText = data.content.map(i => i.text || '').join('').trim();
+    const clean = rawText.replace(/```json|```/g, '').trim();
+    const parsed = JSON.parse(clean);
+
+    const foods = getCurrentFoods();
+    foods.push({ ...parsed, meal });
+    setCurrentFoods(foods);
+    renderMeals();
+    updateTotals();
+
+    input.value = '';
+    status.textContent = `✓ ${parsed.name} adicionado!`;
+    status.className = 'ai-status success';
+    setTimeout(() => { status.textContent = ''; status.className = 'ai-status'; }, 3000);
+  } catch (e) {
+    status.textContent = 'Erro ao analisar. Tente novamente.';
+    status.className = 'ai-status error';
+  }
+
+  btn.disabled = false;
+}
+
+document.getElementById('food-input').addEventListener('keydown', e => {
+  if (e.key === 'Enter') addFood();
+});
+
+function renderHistory() {
+  const el = document.getElementById('history-content');
+  const keys = Object.keys(allDays).sort().reverse().slice(0, 7);
+  if (keys.length === 0) {
+    el.innerHTML = '<p class="empty-msg" style="padding:2rem 0">Nenhum histórico ainda</p>';
+    return;
+  }
+  el.innerHTML = keys.map(k => {
+    const foods = allDays[k];
+    const t = foods.reduce((a, f) => ({ prot: a.prot+f.prot, carb: a.carb+f.carb, fat: a.fat+f.fat, cal: a.cal+f.cal }), { prot:0,carb:0,fat:0,cal:0 });
+    const d = new Date(k + 'T00:00:00');
+    const label = d.toLocaleDateString('pt-BR', { weekday: 'short', day: 'numeric', month: 'short' });
+    return `
+      <div style="background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);padding:1rem 1.25rem;margin-bottom:8px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+          <span style="font-size:14px;font-weight:500;color:var(--color-text-primary)">${label}</span>
+          <span style="font-size:12px;color:var(--color-text-secondary)">${Math.round(t.cal)} kcal</span>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;text-align:center;">
+          <div><div style="font-size:15px;font-weight:500;color:#E24B4A">${Math.round(t.prot)}g</div><div style="font-size:10px;color:var(--color-text-secondary)">proteína</div></div>
+          <div><div style="font-size:15px;font-weight:500;color:#BA7517">${Math.round(t.carb)}g</div><div style="font-size:10px;color:var(--color-text-secondary)">carbo</div></div>
+          <div><div style="font-size:15px;font-weight:500;color:#185FA5">${Math.round(t.fat)}g</div><div style="font-size:10px;color:var(--color-text-secondary)">gordura</div></div>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function toggleGoalsEdit() {
+  const edit = document.getElementById('goals-edit');
+  const view = document.getElementById('goals-view');
+  const isHidden = edit.style.display === 'none';
+  edit.style.display = isHidden ? '' : 'none';
+  view.style.display = isHidden ? 'none' : '';
+  if (isHidden) {
+    document.getElementById('gi-cal').value = goals.cal;
+    document.getElementById('gi-prot').value = goals.prot;
+    document.getElementById('gi-carb').value = goals.carb;
+    document.getElementById('gi-fat').value = goals.fat;
+  }
+}
+
+function saveGoals() {
+  goals.cal = parseInt(document.getElementById('gi-cal').value) || 2000;
+  goals.prot = parseInt(document.getElementById('gi-prot').value) || 150;
+  goals.carb = parseInt(document.getElementById('gi-carb').value) || 250;
+  goals.fat = parseInt(document.getElementById('gi-fat').value) || 70;
+  document.getElementById('g-cal').textContent = goals.cal;
+  document.getElementById('g-prot').textContent = goals.prot + 'g';
+  document.getElementById('g-carb').textContent = goals.carb + 'g';
+  document.getElementById('g-fat').textContent = goals.fat + 'g';
+  toggleGoalsEdit();
+  updateTotals();
+}
+
+updateTotals();
+renderMeals();
+</script>

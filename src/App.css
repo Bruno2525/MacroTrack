@@ -1,0 +1,468 @@
+/* App layout */
+.app {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+}
+
+/* ---- Tab Navigation ---- */
+.tab-bar {
+  display: flex;
+  background: var(--color-surface);
+  border-top: 1px solid var(--color-border);
+  padding: 8px 0 calc(8px + env(safe-area-inset-bottom));
+  order: 2;
+}
+
+.tab-btn {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  padding: 4px 0;
+  color: var(--color-text-muted);
+  font-size: 11px;
+  font-weight: 500;
+  transition: color 0.15s;
+}
+
+.tab-btn.active {
+  color: var(--color-accent);
+}
+
+.tab-btn svg {
+  width: 22px;
+  height: 22px;
+}
+
+/* ---- Main content ---- */
+.main-content {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  order: 1;
+  padding-bottom: 12px;
+}
+
+/* ---- Page header ---- */
+.page-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 16px 8px;
+}
+
+.page-title {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--color-text);
+}
+
+/* ---- Day navigation ---- */
+.day-nav {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 4px 16px 12px;
+}
+
+.day-nav-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--color-surface2);
+  color: var(--color-text);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  flex-shrink: 0;
+}
+
+.day-nav-btn:disabled {
+  opacity: 0.3;
+  cursor: default;
+}
+
+.day-label {
+  flex: 1;
+  text-align: center;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+/* ---- Macro cards ---- */
+.macro-cards {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  padding: 0 16px 12px;
+}
+
+.macro-card {
+  background: var(--color-surface);
+  border-radius: var(--radius);
+  padding: 12px;
+  border: 1px solid var(--color-border);
+}
+
+.macro-card-label {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 4px;
+}
+
+.macro-card-value {
+  font-size: 20px;
+  font-weight: 700;
+  line-height: 1.1;
+}
+
+.macro-card-unit {
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--color-text-muted);
+}
+
+.macro-card-goal {
+  font-size: 11px;
+  color: var(--color-text-muted);
+  margin-top: 2px;
+}
+
+/* ---- Progress bars ---- */
+.progress-section {
+  padding: 0 16px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.progress-row {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.progress-row-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.progress-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+.progress-pct {
+  font-size: 12px;
+  color: var(--color-text-muted);
+}
+
+.progress-track {
+  height: 8px;
+  background: var(--color-surface2);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  border-radius: 999px;
+  transition: width 0.4s ease;
+}
+
+/* ---- Add food section ---- */
+.section {
+  padding: 0 16px 16px;
+}
+
+.section-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 10px;
+}
+
+.add-food-card {
+  background: var(--color-surface);
+  border-radius: var(--radius);
+  padding: 14px;
+  border: 1px solid var(--color-border);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.input-row {
+  display: flex;
+  gap: 8px;
+}
+
+.food-input {
+  flex: 1;
+  background: var(--color-surface2);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  padding: 10px 12px;
+  color: var(--color-text);
+  font-size: 15px;
+}
+
+.food-input::placeholder {
+  color: var(--color-text-muted);
+}
+
+.meal-select {
+  background: var(--color-surface2);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  padding: 10px 8px;
+  color: var(--color-text);
+  font-size: 14px;
+  min-width: 120px;
+}
+
+.meal-select option {
+  background: var(--color-surface);
+}
+
+.analyze-btn {
+  width: 100%;
+  background: var(--color-accent);
+  color: #fff;
+  border-radius: var(--radius-sm);
+  padding: 12px;
+  font-size: 15px;
+  font-weight: 600;
+  transition: opacity 0.15s, background 0.15s;
+}
+
+.analyze-btn:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.analyze-btn.loading {
+  opacity: 0.8;
+}
+
+.analyze-btn.success {
+  background: var(--color-accent);
+}
+
+.analyze-btn.error {
+  background: var(--color-prot);
+}
+
+.status-msg {
+  font-size: 13px;
+  text-align: center;
+  min-height: 18px;
+  color: var(--color-text-muted);
+}
+
+.status-msg.error {
+  color: var(--color-prot);
+}
+
+/* ---- Meal list ---- */
+.meal-group {
+  margin-bottom: 16px;
+}
+
+.meal-group-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 0 16px;
+  margin-bottom: 6px;
+}
+
+.food-item {
+  display: flex;
+  align-items: center;
+  padding: 10px 16px;
+  gap: 10px;
+  background: var(--color-surface);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.food-item:first-child {
+  border-top: 1px solid var(--color-border);
+}
+
+.food-item-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.food-item-name {
+  font-size: 14px;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.food-item-macros {
+  font-size: 12px;
+  color: var(--color-text-muted);
+  margin-top: 2px;
+}
+
+.food-item-macros span {
+  margin-right: 6px;
+}
+
+.remove-btn {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--color-surface2);
+  color: var(--color-text-muted);
+  font-size: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: background 0.15s, color 0.15s;
+}
+
+.remove-btn:hover {
+  background: var(--color-prot);
+  color: #fff;
+}
+
+.empty-state {
+  text-align: center;
+  color: var(--color-text-muted);
+  font-size: 14px;
+  padding: 32px 16px;
+}
+
+/* ---- History ---- */
+.history-list {
+  padding: 0 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.history-card {
+  background: var(--color-surface);
+  border-radius: var(--radius);
+  padding: 12px 14px;
+  border: 1px solid var(--color-border);
+}
+
+.history-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 8px;
+}
+
+.history-date {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.history-cal {
+  font-size: 13px;
+  color: var(--color-accent);
+  font-weight: 600;
+}
+
+.history-macros {
+  display: flex;
+  gap: 12px;
+}
+
+.history-macro {
+  font-size: 12px;
+  color: var(--color-text-muted);
+}
+
+.history-macro span {
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+/* ---- Goals ---- */
+.goals-card {
+  background: var(--color-surface);
+  border-radius: var(--radius);
+  padding: 16px;
+  border: 1px solid var(--color-border);
+  margin: 0 16px 16px;
+}
+
+.goals-card-title {
+  font-size: 15px;
+  font-weight: 700;
+  margin-bottom: 14px;
+  color: var(--color-text);
+}
+
+.goal-field {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.goal-field:last-of-type {
+  border-bottom: none;
+}
+
+.goal-field-label {
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.goal-input {
+  width: 90px;
+  background: var(--color-surface2);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  padding: 7px 10px;
+  color: var(--color-text);
+  font-size: 15px;
+  font-weight: 600;
+  text-align: right;
+}
+
+.save-goals-btn {
+  width: 100%;
+  background: var(--color-accent);
+  color: #fff;
+  border-radius: var(--radius-sm);
+  padding: 12px;
+  font-size: 15px;
+  font-weight: 600;
+  margin-top: 14px;
+  transition: opacity 0.15s;
+}
+
+.save-goals-btn:active {
+  opacity: 0.8;
+}
+
+.save-goals-btn.saved {
+  background: #16845f;
+}
