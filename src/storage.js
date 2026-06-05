@@ -1,5 +1,8 @@
 const DAYS_KEY = 'macrotrack_days'
 const GOALS_KEY = 'macrotrack_goals'
+const FAVORITES_KEY = 'macrotrack_favorites'
+const PLATES_KEY = 'macrotrack_plates'
+const PROFILE_KEY = 'macrotrack_profile'
 
 export const DEFAULT_GOALS = { cal: 2000, prot: 150, carb: 250, fat: 70 }
 
@@ -47,6 +50,59 @@ export function getAllDays() {
   } catch {
     return {}
   }
+}
+
+export function getFavorites() {
+  try {
+    const raw = localStorage.getItem(FAVORITES_KEY)
+    return raw ? JSON.parse(raw) : []
+  } catch { return [] }
+}
+
+export function addFavorite(food) {
+  const favorites = getFavorites()
+  const id = Date.now().toString() + Math.random().toString(36).slice(2)
+  localStorage.setItem(FAVORITES_KEY, JSON.stringify([
+    ...favorites,
+    { id, name: food.name, prot: food.prot, carb: food.carb, fat: food.fat, cal: food.cal, meal: food.meal },
+  ]))
+}
+
+export function removeFavorite(id) {
+  localStorage.setItem(FAVORITES_KEY, JSON.stringify(getFavorites().filter(f => f.id !== id)))
+}
+
+export function getPlates() {
+  try {
+    const raw = localStorage.getItem(PLATES_KEY)
+    return raw ? JSON.parse(raw) : []
+  } catch { return [] }
+}
+
+export function savePlate(name, items) {
+  const plates = getPlates()
+  const newPlate = {
+    id: Date.now().toString() + Math.random().toString(36).slice(2),
+    name,
+    createdAt: new Date().toISOString(),
+    items: items.map(({ name, prot, carb, fat, cal, meal }) => ({ name, prot, carb, fat, cal, meal })),
+  }
+  localStorage.setItem(PLATES_KEY, JSON.stringify([...plates, newPlate]))
+}
+
+export function deletePlate(id) {
+  localStorage.setItem(PLATES_KEY, JSON.stringify(getPlates().filter(p => p.id !== id)))
+}
+
+export function getProfile() {
+  try {
+    const raw = localStorage.getItem(PROFILE_KEY)
+    return raw ? JSON.parse(raw) : null
+  } catch { return null }
+}
+
+export function saveProfile(profile) {
+  localStorage.setItem(PROFILE_KEY, JSON.stringify(profile))
 }
 
 export function dateToStr(date) {

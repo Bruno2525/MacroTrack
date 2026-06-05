@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { saveGoals } from '../storage'
+import ProfileForm from './ProfileForm'
 
 const FIELDS = [
   { key: 'cal', label: 'Calorias', unit: 'kcal' },
@@ -24,11 +25,19 @@ export default function GoalsTab({ goals, onGoalsChange }) {
     setTimeout(() => setSaved(false), 2000)
   }
 
+  function handleProfileApply(newGoals) {
+    setDraft(newGoals)
+    saveGoals(newGoals)
+    onGoalsChange(newGoals)
+  }
+
   return (
     <>
       <div className="page-header">
         <span className="page-title">Metas diárias</span>
       </div>
+
+      <ProfileForm onApply={handleProfileApply} />
 
       <div className="goals-card">
         <div className="goals-card-title">Configurar metas</div>
