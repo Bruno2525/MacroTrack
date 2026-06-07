@@ -33,6 +33,7 @@ export function addFood(dateStr, food) {
   const days = getAllDays()
   days[dateStr] = [...(days[dateStr] || []), food]
   localStorage.setItem(DAYS_KEY, JSON.stringify(days))
+  window.dispatchEvent(new CustomEvent('macrotrack:updated'))
 }
 
 export function removeFood(dateStr, index) {
@@ -40,6 +41,7 @@ export function removeFood(dateStr, index) {
   if (days[dateStr]) {
     days[dateStr] = days[dateStr].filter((_, i) => i !== index)
     localStorage.setItem(DAYS_KEY, JSON.stringify(days))
+    window.dispatchEvent(new CustomEvent('macrotrack:updated'))
   }
 }
 

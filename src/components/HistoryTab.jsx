@@ -1,4 +1,6 @@
+import { useState, useEffect } from 'react'
 import { getAllDays, sumMacros, dateToStr } from '../storage'
+import MonthlyChart from './MonthlyChart'
 
 function fmt(n) {
   return typeof n === 'number' ? n.toFixed(n % 1 === 0 ? 0 : 1) : n
@@ -20,6 +22,18 @@ function formatDate(dateStr) {
 }
 
 export default function HistoryTab({ goals }) {
+  const [refreshKey, setRefreshKey] = useState(0)
+
+  useEffect(() => {
+    const handler = () => setRefreshKey(k => k + 1)
+    window.addEventListener('macrotrack:updated', handler)
+    window.addEventListener('storage', handler)
+    return () => {
+      window.removeEventListener('macrotrack:updated', handler)
+      window.removeEventListener('storage', handler)
+    }
+  }, [])
+
   const days = getAllDays()
 
   const today = new Date()
@@ -39,6 +53,10 @@ export default function HistoryTab({ goals }) {
       <div className="page-header">
         <span className="page-title">Histórico</span>
       </div>
+
+      <MonthlyChart goals={goals} refreshKey={refreshKey} />
+
+      <div className="history-section-title">Últimos 7 dias</div>
 
       {entries.length === 0 ? (
         <p className="empty-state">Nenhum dado nos últimos 7 dias</p>
