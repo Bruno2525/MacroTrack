@@ -1,29 +1,50 @@
 import { useState, useEffect, useRef } from 'react'
 import { BrowserMultiFormatReader } from '@zxing/browser'
+import { DecodeHintType, BarcodeFormat } from '@zxing/library'
 import * as LZString from 'lz-string'
 import { mergeImportedData, getConflictDays } from '../storage'
 
-function parseScannedText(text) {
-  const decompress =
-    LZString.decompressFromEncodedURIComponent ??
-    LZString.default?.decompressFromEncodedURIComponent
-  const decompressed = typeof decompress === 'function' ? decompress(text) : null
+const hints = new Map()
+hints.set(DecodeHintType.POSSIBLE_FORMATS, [BarcodeFormat.QR_CODE])
+hints.set(DecodeHintType.TRY_HARDER, true)
 
-  const parsed = decompressed ? JSON.parse(decompressed) : JSON.parse(text)
-
-  if (parsed.version !== 1 || !parsed.data) return null
-
-  if (parsed.compact && parsed.data.days) {
-    const expanded = {}
-    for (const [date, items] of Object.entries(parsed.data.days)) {
-      expanded[date] = items.map(i => ({
-        name: i.n, prot: i.p, carb: i.c, fat: i.f, cal: i.k, meal: i.m,
-      }))
-    }
-    parsed.data.days = expanded
+function expandCompactDays(data) {
+  if (!data.compact || !data.data?.days) return
+  const expanded = {}
+  for (const [date, items] of Object.entries(data.data.days)) {
+    expanded[date] = items.map(i => ({
+      name: i.n, prot: i.p, carb: i.c, fat: i.f, cal: i.k, meal: i.m,
+    }))
   }
+  data.data.days = expanded
+}
 
-  return parsed
+function parseScannedText(text) {
+  // Try LZString decompression first (new compressed format)
+  try {
+    const decompress =
+      LZString.decompressFromEncodedURIComponent ??
+      LZString.default?.decompressFromEncodedURIComponent
+    const decompressed = typeof decompress === 'function' ? decompress(text) : null
+    if (decompressed) {
+      const data = JSON.parse(decompressed)
+      if (data.version === 1 && data.data) {
+        expandCompactDays(data)
+        return data
+      }
+    }
+  } catch {}
+
+  // Fallback: raw JSON (old format or uncompressed)
+  try {
+    const data = JSON.parse(text)
+    if (data.version === 1 && data.data) {
+      expandCompactDays(data)
+      return data
+    }
+  } catch {}
+
+  return null
 }
 
 function buildSummary(imported) {
@@ -44,23 +65,26 @@ export default function ScannerModal({ onClose }) {
   const [phase, setPhase] = useState('scanning') // 'scanning' | 'preview' | 'conflict' | 'denied'
   const [scanResult, setScanResult] = useState(null)
   const [scanError, setScanError] = useState('')
+  const [scanDebug, setScanDebug] = useState('') // DEBUG: remove after confirming scanner works
   const [conflictCount, setConflictCount] = useState(0)
   const videoRef = useRef(null)
   const controlsRef = useRef(null)
 
   useEffect(() => {
     let stopped = false
-    const codeReader = new BrowserMultiFormatReader()
+    const codeReader = new BrowserMultiFormatReader(hints)
 
     async function start() {
       try {
         controlsRef.current = await codeReader.decodeFromVideoDevice(
-          undefined, // undefined = back camera (facingMode: 'environment')
+          undefined, // undefined → back camera (facingMode: 'environment')
           videoRef.current,
           (result, _err, controls) => {
             if (stopped || !result) return
+            const text = result.getText()
+            setScanDebug(text.slice(0, 100)) // DEBUG
             try {
-              const parsed = parseScannedText(result.getText())
+              const parsed = parseScannedText(text)
               if (!parsed) {
                 setScanError('QR Code não é do MacroTrack. Continue escaneando...')
                 return
@@ -85,7 +109,7 @@ export default function ScannerModal({ onClose }) {
         ) {
           setPhase('denied')
         } else {
-          setScanError('Não foi possível acessar a câmera.')
+          setScanError(`Câmera indisponível: ${err.message || String(err)}`)
         }
       }
     }
@@ -134,6 +158,10 @@ export default function ScannerModal({ onClose }) {
               <video ref={videoRef} className="qr-video" />
             </div>
             {scanError && <p className="modal-error">{scanError}</p>}
+            {/* DEBUG — remove after confirming scanner works */}
+            {scanDebug && (
+              <pre className="scan-debug">{scanDebug}</pre>
+            )}
           </>
         )}
 

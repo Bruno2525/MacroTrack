@@ -91,7 +91,7 @@ export default function QRCodeModal({ onClose }) {
         `Dados muito grandes para QR Code (${size} chars após compressão). Use "Exportar backup" para dados completos.`
       )
     } catch (err) {
-      setSizeError('Erro ao gerar QR Code. Tente "Exportar backup" como alternativa.')
+      setSizeError(`Erro ao gerar: ${err.message || String(err)}`)
       console.error('QRCodeModal.handleGenerate:', err)
     }
   }
@@ -146,10 +146,11 @@ export default function QRCodeModal({ onClose }) {
                 id="qr-export-svg"
                 value={qrData}
                 size={280}
-                margin={2}
+                level="L"
+                margin={4}
                 bgColor="#ffffff"
                 fgColor="#000000"
-                level="L"
+                style={{ display: 'block', margin: '0 auto' }}
               />
             </div>
             <div className="modal-actions">
@@ -193,6 +194,15 @@ export default function QRCodeModal({ onClose }) {
 
             <button className="modal-generate-btn" onClick={handleGenerate}>
               Gerar QR Code
+            </button>
+
+            {/* DEBUG — remove after confirming QRCodeSVG renders on mobile */}
+            <button
+              className="backup-btn"
+              style={{ marginTop: 4 }}
+              onClick={() => setQrData('teste123')}
+            >
+              Testar renderização
             </button>
           </>
         )}
