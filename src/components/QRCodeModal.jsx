@@ -13,6 +13,21 @@ export default function QRCodeModal({ onClose }) {
   const [qrData, setQrData] = useState(null)
   const [sizeError, setSizeError] = useState('')
 
+  function compactDays(days) {
+    const result = {}
+    for (const [date, items] of Object.entries(days)) {
+      result[date] = items.map(item => ({
+        n: item.name,
+        p: Math.round(item.prot * 10) / 10,
+        c: Math.round(item.carb * 10) / 10,
+        f: Math.round(item.fat * 10) / 10,
+        k: Math.round(item.cal),
+        m: item.meal,
+      }))
+    }
+    return result
+  }
+
   function buildJson() {
     const allDays = getAllDays()
     let days = {}
@@ -35,10 +50,11 @@ export default function QRCodeModal({ onClose }) {
 
     return JSON.stringify({
       version: 1,
+      compact: true,
       type,
       date,
       data: {
-        days,
+        days: compactDays(days),
         goals: getGoals(),
         favorites: getFavorites(),
         plates: getPlates(),
@@ -90,7 +106,8 @@ export default function QRCodeModal({ onClose }) {
               <QRCodeCanvas
                 id="qr-export-canvas"
                 value={qrData}
-                size={256}
+                size={280}
+                margin={2}
                 bgColor="#ffffff"
                 fgColor="#000000"
                 level="L"

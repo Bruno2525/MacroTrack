@@ -49,6 +49,15 @@ export default function ScannerModal({ onClose }) {
               setScanError('QR Code não é do MacroTrack. Continue escaneando...')
               return
             }
+            if (parsed.compact && parsed.data.days) {
+              const expanded = {}
+              for (const [date, items] of Object.entries(parsed.data.days)) {
+                expanded[date] = items.map(i => ({
+                  name: i.n, prot: i.p, carb: i.c, fat: i.f, cal: i.k, meal: i.m,
+                }))
+              }
+              parsed.data.days = expanded
+            }
             stopped.value = true
             scanner.stop().finally(() => {
               setScanResult(parsed)
