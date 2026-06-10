@@ -1,9 +1,30 @@
-import { useState, useEffect } from 'react'
-import { Html5Qrcode } from 'html5-qrcode'
+import { useState, useEffect, useRef } from 'react'
+import { BrowserMultiFormatReader } from '@zxing/browser'
 import * as LZString from 'lz-string'
 import { mergeImportedData, getConflictDays } from '../storage'
 
-const READER_ID = 'qr-scanner-reader'
+function parseScannedText(text) {
+  const decompress =
+    LZString.decompressFromEncodedURIComponent ??
+    LZString.default?.decompressFromEncodedURIComponent
+  const decompressed = typeof decompress === 'function' ? decompress(text) : null
+
+  const parsed = decompressed ? JSON.parse(decompressed) : JSON.parse(text)
+
+  if (parsed.version !== 1 || !parsed.data) return null
+
+  if (parsed.compact && parsed.data.days) {
+    const expanded = {}
+    for (const [date, items] of Object.entries(parsed.data.days)) {
+      expanded[date] = items.map(i => ({
+        name: i.n, prot: i.p, carb: i.c, fat: i.f, cal: i.k, meal: i.m,
+      }))
+    }
+    parsed.data.days = expanded
+  }
+
+  return parsed
+}
 
 function buildSummary(imported) {
   const { days = {}, favorites = [], plates = [], goals, profile } = imported.data
@@ -24,65 +45,57 @@ export default function ScannerModal({ onClose }) {
   const [scanResult, setScanResult] = useState(null)
   const [scanError, setScanError] = useState('')
   const [conflictCount, setConflictCount] = useState(0)
+  const videoRef = useRef(null)
+  const controlsRef = useRef(null)
 
   useEffect(() => {
-    const stopped = { value: false }
-    const scanner = new Html5Qrcode(READER_ID)
+    let stopped = false
+    const codeReader = new BrowserMultiFormatReader()
 
-    scanner
-      .start(
-        { facingMode: 'environment' },
-        { fps: 10, qrbox: { width: 220, height: 220 } },
-        (text) => {
-          if (stopped.value) return
-          try {
-            // Try LZString decompression first, fall back to raw JSON for old QR codes
-            let parsed
-            const decompress = LZString.decompressFromEncodedURIComponent ?? LZString.default?.decompressFromEncodedURIComponent
-            const decompressed = typeof decompress === 'function' ? decompress(text) : null
-            if (decompressed) {
-              parsed = JSON.parse(decompressed)
-            } else {
-              parsed = JSON.parse(text)
-            }
-            if (parsed.version !== 1 || !parsed.data) {
-              setScanError('QR Code não é do MacroTrack. Continue escaneando...')
-              return
-            }
-            if (parsed.compact && parsed.data.days) {
-              const expanded = {}
-              for (const [date, items] of Object.entries(parsed.data.days)) {
-                expanded[date] = items.map(i => ({
-                  name: i.n, prot: i.p, carb: i.c, fat: i.f, cal: i.k, meal: i.m,
-                }))
+    async function start() {
+      try {
+        controlsRef.current = await codeReader.decodeFromVideoDevice(
+          undefined, // undefined = back camera (facingMode: 'environment')
+          videoRef.current,
+          (result, _err, controls) => {
+            if (stopped || !result) return
+            try {
+              const parsed = parseScannedText(result.getText())
+              if (!parsed) {
+                setScanError('QR Code não é do MacroTrack. Continue escaneando...')
+                return
               }
-              parsed.data.days = expanded
-            }
-            stopped.value = true
-            scanner.stop().finally(() => {
+              stopped = true
+              controls.stop()
               setScanResult(parsed)
               setPhase('preview')
               setScanError('')
-            })
-          } catch {
-            setScanError('QR Code inválido. Continue escaneando...')
+            } catch {
+              setScanError('QR Code inválido. Continue escaneando...')
+            }
           }
-        },
-        () => {}
-      )
-      .catch((err) => {
-        if (stopped.value) return
+        )
+      } catch (err) {
+        if (stopped) return
         const msg = String(err).toLowerCase()
-        if (msg.includes('notallowederror') || msg.includes('permission')) {
+        if (
+          msg.includes('notallowederror') ||
+          msg.includes('permission') ||
+          msg.includes('denied')
+        ) {
           setPhase('denied')
         } else {
           setScanError('Não foi possível acessar a câmera.')
         }
-      })
+      }
+    }
+
+    start()
 
     return () => {
-      stopped.value = true
-      scanner.stop().catch(() => {})
+      stopped = true
+      controlsRef.current?.stop()
+      BrowserMultiFormatReader.releaseAllStreams()
     }
   }, [])
 
@@ -118,7 +131,7 @@ export default function ScannerModal({ onClose }) {
               Aponte a câmera para um QR Code do MacroTrack. O acesso à câmera é necessário para leitura.
             </p>
             <div className="qr-reader-wrapper">
-              <div id={READER_ID} />
+              <video ref={videoRef} className="qr-video" />
             </div>
             {scanError && <p className="modal-error">{scanError}</p>}
           </>
@@ -194,7 +207,8 @@ export default function ScannerModal({ onClose }) {
           <>
             <div className="scan-preview">
               <p className="conflict-text">
-                {conflictCount} dia{conflictCount !== 1 ? 's' : ''} já {conflictCount !== 1 ? 'possuem' : 'possui'} dados registrados.
+                {conflictCount} dia{conflictCount !== 1 ? 's' : ''} já{' '}
+                {conflictCount !== 1 ? 'possuem' : 'possui'} dados registrados.
                 O que deseja fazer com os conflitos?
               </p>
             </div>
