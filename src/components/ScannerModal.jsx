@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Html5Qrcode } from 'html5-qrcode'
-import LZString from 'lz-string'
+import * as LZString from 'lz-string'
 import { mergeImportedData, getConflictDays } from '../storage'
 
 const READER_ID = 'qr-scanner-reader'
@@ -38,7 +38,8 @@ export default function ScannerModal({ onClose }) {
           try {
             // Try LZString decompression first, fall back to raw JSON for old QR codes
             let parsed
-            const decompressed = LZString.decompressFromEncodedURIComponent(text)
+            const decompress = LZString.decompressFromEncodedURIComponent ?? LZString.default?.decompressFromEncodedURIComponent
+            const decompressed = typeof decompress === 'function' ? decompress(text) : null
             if (decompressed) {
               parsed = JSON.parse(decompressed)
             } else {

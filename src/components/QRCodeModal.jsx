@@ -1,9 +1,11 @@
 import { useState } from 'react'
 import { QRCodeCanvas } from 'qrcode.react'
-import LZString from 'lz-string'
+import * as LZString from 'lz-string'
 import { getAllDays, getGoals, getFavorites, getPlates, getProfile, dateToStr } from '../storage'
 
-const MAX_QR_CHARS = 6000
+// QR byte-mode hard limit at error correction level L (maximum capacity): 2953 bytes.
+// Using 2800 as a safe margin.
+const MAX_QR_CHARS = 2800
 
 export default function QRCodeModal({ onClose }) {
   const [exportType, setExportType] = useState('today')
@@ -47,15 +49,22 @@ export default function QRCodeModal({ onClose }) {
 
   function handleGenerate() {
     setSizeError('')
-    const json = buildJson()
-    const compressed = LZString.compressToEncodedURIComponent(json)
-    if (compressed.length > MAX_QR_CHARS) {
-      setSizeError(
-        `Dados muito grandes mesmo após compressão (${compressed.length} chars). Use "Exportar backup" para dados completos.`
-      )
-      return
+    try {
+      const json = buildJson()
+      const compress = LZString.compressToEncodedURIComponent ?? LZString.default?.compressToEncodedURIComponent
+      if (typeof compress !== 'function') throw new Error('LZString não disponível')
+      const compressed = compress(json)
+      if (!compressed || compressed.length > MAX_QR_CHARS) {
+        setSizeError(
+          `Dados muito grandes para QR Code (${compressed?.length ?? '?'} chars após compressão). Use "Exportar backup" para dados completos.`
+        )
+        return
+      }
+      setQrData(compressed)
+    } catch (err) {
+      setSizeError('Erro ao gerar QR Code. Tente "Exportar backup" como alternativa.')
+      console.error('QRCodeModal.handleGenerate:', err)
     }
-    setQrData(compressed)
   }
 
   function handleSaveImage() {
@@ -81,10 +90,10 @@ export default function QRCodeModal({ onClose }) {
               <QRCodeCanvas
                 id="qr-export-canvas"
                 value={qrData}
-                size={240}
+                size={256}
                 bgColor="#ffffff"
                 fgColor="#000000"
-                level="M"
+                level="L"
               />
             </div>
             <div className="modal-actions">

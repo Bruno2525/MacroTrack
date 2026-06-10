@@ -4,6 +4,7 @@ import MonthlyChart from './MonthlyChart'
 import QRCodeModal from './QRCodeModal'
 import ScannerModal from './ScannerModal'
 import BackupButtons from './BackupButtons'
+import ErrorBoundary from './ErrorBoundary'
 
 function IconQR() {
   return (
@@ -100,7 +101,26 @@ export default function HistoryTab({ goals }) {
 
       <div className="history-section-title">Últimos 7 dias</div>
 
-      {showQRModal && <QRCodeModal onClose={() => setShowQRModal(false)} />}
+      {showQRModal && (
+        <ErrorBoundary fallback={
+          <div className="modal-overlay" onClick={() => setShowQRModal(false)}>
+            <div className="modal-box" onClick={e => e.stopPropagation()}>
+              <div className="modal-header">
+                <span className="modal-title">Erro</span>
+                <button className="modal-close" onClick={() => setShowQRModal(false)}>✕</button>
+              </div>
+              <p className="modal-error" style={{ textAlign: 'left' }}>
+                Não foi possível gerar o QR Code. Use "Exportar backup" para salvar seus dados.
+              </p>
+              <button className="modal-action-btn secondary" onClick={() => setShowQRModal(false)}>
+                Fechar
+              </button>
+            </div>
+          </div>
+        }>
+          <QRCodeModal onClose={() => setShowQRModal(false)} />
+        </ErrorBoundary>
+      )}
       {showScannerModal && <ScannerModal onClose={() => setShowScannerModal(false)} />}
 
       {entries.length === 0 ? (
