@@ -7,16 +7,20 @@ import { getAllDays, getGoals, getFavorites, getPlates, getProfile, dateToStr } 
 // Using 2800 as a safe margin.
 const MAX_QR_CHARS = 2800
 
+const MEAL_ABBR = {
+  'Café da manhã': 'C', 'Almoço': 'A', 'Lanche': 'L', 'Jantar': 'J', 'Suplemento': 'S',
+}
+
 function compactDays(days) {
   const result = {}
   for (const [date, items] of Object.entries(days)) {
     result[date] = items.map(item => ({
-      n: item.name,
-      p: Math.round(item.prot * 10) / 10,
-      c: Math.round(item.carb * 10) / 10,
-      f: Math.round(item.fat * 10) / 10,
+      n: item.name.slice(0, 30),
+      p: Math.round(item.prot),
+      c: Math.round(item.carb),
+      f: Math.round(item.fat),
       k: Math.round(item.cal),
-      m: item.meal,
+      m: MEAL_ABBR[item.meal] ?? item.meal.slice(0, 1),
     }))
   }
   return result

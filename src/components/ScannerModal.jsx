@@ -8,12 +8,19 @@ const hints = new Map()
 hints.set(DecodeHintType.POSSIBLE_FORMATS, [BarcodeFormat.QR_CODE])
 hints.set(DecodeHintType.TRY_HARDER, true)
 
+const MEAL_MAP = { C: 'Café da manhã', A: 'Almoço', L: 'Lanche', J: 'Jantar', S: 'Suplemento' }
+
 function expandCompactDays(data) {
   if (!data.compact || !data.data?.days) return
   const expanded = {}
   for (const [date, items] of Object.entries(data.data.days)) {
     expanded[date] = items.map(i => ({
-      name: i.n, prot: i.p, carb: i.c, fat: i.f, cal: i.k, meal: i.m,
+      name: i.n,
+      prot: i.p,
+      carb: i.c,
+      fat: i.f,
+      cal: i.k,
+      meal: MEAL_MAP[i.m] ?? i.m, // fallback para QR Codes antigos com nome completo
     }))
   }
   data.data.days = expanded
