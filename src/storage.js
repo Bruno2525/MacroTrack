@@ -122,3 +122,59 @@ export function sumMacros(foods) {
     { prot: 0, carb: 0, fat: 0, cal: 0 },
   )
 }
+
+export function exportAllData() {
+  return {
+    version: 1,
+    type: 'all',
+    date: dateToStr(new Date()),
+    data: {
+      days: getAllDays(),
+      goals: getGoals(),
+      favorites: getFavorites(),
+      plates: getPlates(),
+      profile: getProfile(),
+    },
+  }
+}
+
+export function getConflictDays(imported) {
+  if (!imported?.data?.days) return []
+  const existing = getAllDays()
+  return Object.keys(imported.data.days).filter(
+    date => existing[date] && existing[date].length > 0
+  )
+}
+
+export function mergeImportedData(imported, replaceDays = false) {
+  const { data } = imported
+
+  if (data.goals) saveGoals(data.goals)
+  if (data.profile) saveProfile(data.profile)
+
+  if (data.days) {
+    const existing = getAllDays()
+    for (const [date, foods] of Object.entries(data.days)) {
+      if (!existing[date] || existing[date].length === 0 || replaceDays) {
+        existing[date] = foods
+      }
+    }
+    localStorage.setItem(DAYS_KEY, JSON.stringify(existing))
+  }
+
+  if (data.favorites?.length) {
+    const existing = getFavorites()
+    const existingNames = new Set(existing.map(f => f.name.toLowerCase()))
+    const toAdd = data.favorites.filter(f => !existingNames.has(f.name.toLowerCase()))
+    localStorage.setItem(FAVORITES_KEY, JSON.stringify([...existing, ...toAdd]))
+  }
+
+  if (data.plates?.length) {
+    const existing = getPlates()
+    const existingNames = new Set(existing.map(p => p.name.toLowerCase()))
+    const toAdd = data.plates.filter(p => !existingNames.has(p.name.toLowerCase()))
+    localStorage.setItem(PLATES_KEY, JSON.stringify([...existing, ...toAdd]))
+  }
+
+  window.dispatchEvent(new CustomEvent('macrotrack:updated'))
+}
