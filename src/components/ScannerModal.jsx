@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Html5Qrcode } from 'html5-qrcode'
+import LZString from 'lz-string'
 import { mergeImportedData, getConflictDays } from '../storage'
 
 const READER_ID = 'qr-scanner-reader'
@@ -35,14 +36,21 @@ export default function ScannerModal({ onClose }) {
         (text) => {
           if (stopped.value) return
           try {
-            const data = JSON.parse(text)
-            if (data.version !== 1 || !data.data) {
+            // Try LZString decompression first, fall back to raw JSON for old QR codes
+            let parsed
+            const decompressed = LZString.decompressFromEncodedURIComponent(text)
+            if (decompressed) {
+              parsed = JSON.parse(decompressed)
+            } else {
+              parsed = JSON.parse(text)
+            }
+            if (parsed.version !== 1 || !parsed.data) {
               setScanError('QR Code não é do MacroTrack. Continue escaneando...')
               return
             }
             stopped.value = true
             scanner.stop().finally(() => {
-              setScanResult(data)
+              setScanResult(parsed)
               setPhase('preview')
               setScanError('')
             })

@@ -1,8 +1,9 @@
 import { useState } from 'react'
 import { QRCodeCanvas } from 'qrcode.react'
+import LZString from 'lz-string'
 import { getAllDays, getGoals, getFavorites, getPlates, getProfile, dateToStr } from '../storage'
 
-const MAX_QR_CHARS = 2800
+const MAX_QR_CHARS = 6000
 
 export default function QRCodeModal({ onClose }) {
   const [exportType, setExportType] = useState('today')
@@ -47,13 +48,14 @@ export default function QRCodeModal({ onClose }) {
   function handleGenerate() {
     setSizeError('')
     const json = buildJson()
-    if (json.length > MAX_QR_CHARS) {
+    const compressed = LZString.compressToEncodedURIComponent(json)
+    if (compressed.length > MAX_QR_CHARS) {
       setSizeError(
-        `Dados muito grandes (${json.length} caracteres). Use "Exportar backup" para dados completos.`
+        `Dados muito grandes mesmo após compressão (${compressed.length} chars). Use "Exportar backup" para dados completos.`
       )
       return
     }
-    setQrData(json)
+    setQrData(compressed)
   }
 
   function handleSaveImage() {
