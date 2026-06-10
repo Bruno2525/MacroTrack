@@ -918,6 +918,13 @@
   margin: 0;
 }
 
+.modal-warning {
+  color: var(--color-carb);
+  font-size: 12px;
+  text-align: center;
+  margin: 0;
+}
+
 .modal-generate-btn {
   width: 100%;
   background: var(--color-accent);

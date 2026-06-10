@@ -3,9 +3,7 @@ import { QRCodeSVG } from 'qrcode.react'
 import * as LZString from 'lz-string'
 import { getAllDays, getGoals, getFavorites, getPlates, getProfile, dateToStr } from '../storage'
 
-// QR byte-mode hard limit at error correction level L (maximum capacity): 2953 bytes.
-// Using 2800 as a safe margin.
-const MAX_QR_CHARS = 2800
+const MAX_QR_CHARS = 4000
 
 const MEAL_ABBR = {
   'Café da manhã': 'C', 'Almoço': 'A', 'Lanche': 'L', 'Jantar': 'J', 'Suplemento': 'S',
@@ -31,6 +29,7 @@ export default function QRCodeModal({ onClose }) {
   const [selectedDate, setSelectedDate] = useState(dateToStr(new Date()))
   const [qrData, setQrData] = useState(null)
   const [sizeError, setSizeError] = useState('')
+  const [warning, setWarning] = useState('')
 
   function buildPayload() {
     const allDays = getAllDays()
@@ -69,30 +68,64 @@ export default function QRCodeModal({ onClose }) {
 
   function handleGenerate() {
     setSizeError('')
+    setWarning('')
     try {
       const payload = buildPayload()
       const json = JSON.stringify(payload)
 
-      // Try LZString compression (handles both namespace and default export)
       const compress =
         LZString.compressToEncodedURIComponent ??
         LZString.default?.compressToEncodedURIComponent
-      const compressed = typeof compress === 'function' ? compress(json) : null
+      const doCompress = typeof compress === 'function' ? compress : s => s
+      const compressed = doCompress(json)
 
-      if (compressed && compressed.length <= MAX_QR_CHARS) {
+      if (compressed.length <= MAX_QR_CHARS) {
         setQrData(compressed)
         return
       }
 
-      // Fallback: raw compact JSON (smaller payload, no compression overhead)
+      // Fallback: raw compact JSON
       if (json.length <= MAX_QR_CHARS) {
         setQrData(json)
         return
       }
 
-      const size = compressed?.length ?? json.length
+      // Last fallback (day exports only): exportar só os totais do dia
+      if (exportType !== 'all') {
+        const allDays = getAllDays()
+        const dateStr = payload.date
+        const dayItems = allDays[dateStr] || []
+        const totals = dayItems.reduce(
+          (acc, f) => ({
+            cal: acc.cal + (f.cal || 0),
+            prot: acc.prot + (f.prot || 0),
+            carb: acc.carb + (f.carb || 0),
+            fat: acc.fat + (f.fat || 0),
+          }),
+          { cal: 0, prot: 0, carb: 0, fat: 0 }
+        )
+        const summaryJson = JSON.stringify({
+          version: 1,
+          type: 'summary',
+          date: dateStr,
+          data: {
+            cal: Math.round(totals.cal),
+            prot: Math.round(totals.prot),
+            carb: Math.round(totals.carb),
+            fat: Math.round(totals.fat),
+          },
+        })
+        const compressedSummary = doCompress(summaryJson)
+        if (compressedSummary.length <= MAX_QR_CHARS) {
+          setQrData(compressedSummary)
+          setWarning('QR Code gerado com totais do dia (sem detalhes das refeições)')
+          return
+        }
+      }
+
+      const size = compressed.length
       setSizeError(
-        `Dados muito grandes para QR Code (${size} chars após compressão). Use "Exportar backup" para dados completos.`
+        `Dados muito grandes para QR Code (${size} chars). Use "Exportar backup" para dados completos.`
       )
     } catch (err) {
       setSizeError(`Erro ao gerar: ${err.message || String(err)}`)
@@ -145,20 +178,22 @@ export default function QRCodeModal({ onClose }) {
 
         {qrData ? (
           <>
+            {warning && <p className="modal-warning">{warning}</p>}
             <div className="qr-container">
               <QRCodeSVG
                 id="qr-export-svg"
                 value={qrData}
-                size={280}
+                size={300}
                 level="L"
                 margin={4}
+                version={40}
                 bgColor="#ffffff"
                 fgColor="#000000"
                 style={{ display: 'block', margin: '0 auto' }}
               />
             </div>
             <div className="modal-actions">
-              <button className="modal-action-btn secondary" onClick={() => setQrData(null)}>
+              <button className="modal-action-btn secondary" onClick={() => { setQrData(null); setWarning('') }}>
                 Voltar
               </button>
               <button className="modal-action-btn primary" onClick={handleSaveImage}>
@@ -177,7 +212,7 @@ export default function QRCodeModal({ onClose }) {
                 <button
                   key={key}
                   className={`option-btn ${exportType === key ? 'active' : ''}`}
-                  onClick={() => { setExportType(key); setSizeError('') }}
+                  onClick={() => { setExportType(key); setSizeError(''); setWarning('') }}
                 >
                   {label}
                 </button>
