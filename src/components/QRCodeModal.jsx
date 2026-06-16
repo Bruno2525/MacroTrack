@@ -30,6 +30,7 @@ export default function QRCodeModal({ onClose }) {
   const [qrData, setQrData] = useState(null)
   const [sizeError, setSizeError] = useState('')
   const [warning, setWarning] = useState('')
+  const [debugLog, setDebugLog] = useState([])
 
   function buildPayload() {
     const allDays = getAllDays()
@@ -66,66 +67,79 @@ export default function QRCodeModal({ onClose }) {
     }
   }
 
-  function handleGenerate() {
+  async function handleGenerate() {
     setSizeError('')
     setWarning('')
+    setDebugLog([])
+    const log = (msg) => setDebugLog(prev => [...prev, msg])
 
-    const compress =
-      LZString.compressToEncodedURIComponent ??
-      LZString.default?.compressToEncodedURIComponent
-    const doCompress = typeof compress === 'function' ? compress : s => s
-
-    // Tentativa 1: payload completo comprimido
     try {
-      const json = JSON.stringify(buildPayload())
-      const compressed = doCompress(json)
-      if (compressed.length <= MAX_QR_CHARS) {
+      log('1. Resolvendo LZString...')
+      const compress =
+        LZString.compressToEncodedURIComponent ??
+        LZString.default?.compressToEncodedURIComponent
+      const doCompress = typeof compress === 'function' ? compress : null
+      log(`2. LZString: ${doCompress ? 'OK (função encontrada)' : 'FALHOU (undefined)'}`)
+
+      log('3. Montando payload...')
+      const payload = buildPayload()
+      const json = JSON.stringify(payload)
+      log(`4. JSON montado: ${json.length} chars`)
+
+      log('5. Comprimindo...')
+      const compressed = doCompress ? doCompress(json) : null
+      log(`6. Comprimido: ${compressed != null ? compressed.length + ' chars' : 'NULL/UNDEFINED'}`)
+
+      if (compressed != null && compressed.length <= MAX_QR_CHARS) {
+        log('7. OK — setQrData(compressed)')
         setQrData(compressed)
         return
       }
-      // Tentativa 2: JSON cru sem compressão
-      try {
+
+      if (compressed == null) {
+        log('7b. Sem compressão — tentando JSON cru...')
         if (json.length <= MAX_QR_CHARS) {
+          log(`7c. JSON cru OK (${json.length} chars) — setQrData(json)`)
           setQrData(json)
           return
         }
-        // Tentativa 3: só totais do dia (day exports)
-        try {
-          if (exportType === 'all') throw new Error('Export "all" muito grande para QR Code')
-          const allDays = getAllDays()
-          const dateStr = exportType === 'today' ? dateToStr(new Date()) : selectedDate
-          const dayItems = allDays[dateStr] || []
-          const totals = dayItems.reduce(
-            (acc, f) => ({
-              cal: acc.cal + (f.cal || 0),
-              prot: acc.prot + (f.prot || 0),
-              carb: acc.carb + (f.carb || 0),
-              fat: acc.fat + (f.fat || 0),
-            }),
-            { cal: 0, prot: 0, carb: 0, fat: 0 }
-          )
-          const summaryJson = JSON.stringify({
-            version: 1, type: 'summary', date: dateStr,
-            data: { cal: Math.round(totals.cal), prot: Math.round(totals.prot), carb: Math.round(totals.carb), fat: Math.round(totals.fat) },
-          })
-          const compressedSummary = doCompress(summaryJson)
-          if (compressedSummary.length <= MAX_QR_CHARS) {
-            setQrData(compressedSummary)
-            setWarning('QR Code gerado com totais do dia (sem detalhes das refeições)')
-            return
-          }
-          throw new Error(`Sumário ainda muito grande (${compressedSummary.length} chars)`)
-        } catch (e3) {
-          setSizeError(`Dados muito grandes para QR Code. Use "Exportar backup". (${e3.message})`)
-          console.error('QRCodeModal tentativa 3:', e3)
-        }
-      } catch (e2) {
-        setSizeError(`Erro na tentativa 2: ${e2.message}`)
-        console.error('QRCodeModal tentativa 2:', e2)
+        log(`7d. JSON cru grande demais: ${json.length} > ${MAX_QR_CHARS}`)
+      } else {
+        log(`7b. Comprimido grande demais: ${compressed.length} > ${MAX_QR_CHARS}`)
       }
-    } catch (e1) {
-      setSizeError(`Erro ao gerar: ${e1.message || String(e1)}`)
-      console.error('QRCodeModal tentativa 1:', e1)
+
+      log('8. Tentando fallback de sumário...')
+      if (exportType === 'all') throw new Error('Export "all" muito grande para QR Code')
+      const allDays = getAllDays()
+      const dateStr = exportType === 'today' ? dateToStr(new Date()) : selectedDate
+      const dayItems = allDays[dateStr] || []
+      const totals = dayItems.reduce(
+        (acc, f) => ({
+          cal: acc.cal + (f.cal || 0),
+          prot: acc.prot + (f.prot || 0),
+          carb: acc.carb + (f.carb || 0),
+          fat: acc.fat + (f.fat || 0),
+        }),
+        { cal: 0, prot: 0, carb: 0, fat: 0 }
+      )
+      const summaryJson = JSON.stringify({
+        version: 1, type: 'summary', date: dateStr,
+        data: { cal: Math.round(totals.cal), prot: Math.round(totals.prot), carb: Math.round(totals.carb), fat: Math.round(totals.fat) },
+      })
+      const compressedSummary = doCompress ? doCompress(summaryJson) : summaryJson
+      log(`9. Sumário: ${compressedSummary.length} chars`)
+      if (compressedSummary.length <= MAX_QR_CHARS) {
+        log('10. Sumário OK — setQrData(compressedSummary)')
+        setQrData(compressedSummary)
+        setWarning('QR Code gerado com totais do dia (sem detalhes das refeições)')
+        return
+      }
+      throw new Error(`Sumário ainda muito grande (${compressedSummary.length} chars)`)
+    } catch (err) {
+      const msg = `EXCEÇÃO: ${err.name}: ${err.message}`
+      setDebugLog(prev => [...prev, msg])
+      setSizeError(`Erro ao gerar: ${err.message || String(err)}`)
+      console.error('QRCodeModal.handleGenerate:', err)
     }
   }
 
@@ -188,7 +202,7 @@ export default function QRCodeModal({ onClose }) {
               />
             </div>
             <div className="modal-actions">
-              <button className="modal-action-btn secondary" onClick={() => { setQrData(null); setWarning('') }}>
+              <button className="modal-action-btn secondary" onClick={() => { setQrData(null); setWarning(''); setDebugLog([]) }}>
                 Voltar
               </button>
               <button className="modal-action-btn primary" onClick={handleSaveImage}>
@@ -229,6 +243,14 @@ export default function QRCodeModal({ onClose }) {
             <button className="modal-generate-btn" onClick={handleGenerate}>
               Gerar QR Code
             </button>
+
+            {debugLog.length > 0 && (
+              <div style={{ marginTop: 8, padding: '8px 10px', background: '#111', borderRadius: 6, fontSize: 11, color: '#0f0', fontFamily: 'monospace', textAlign: 'left', maxHeight: 200, overflowY: 'auto' }}>
+                {debugLog.map((line, i) => (
+                  <div key={i}>{line}</div>
+                ))}
+              </div>
+            )}
 
             {/* DEBUG — remove after confirming QRCodeSVG renders on mobile */}
             <button
