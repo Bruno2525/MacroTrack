@@ -28,7 +28,7 @@ export default function QRCodeModal({ onClose }) {
   const [exportType, setExportType] = useState('today')
   const [selectedDate, setSelectedDate] = useState(dateToStr(new Date()))
   const [qrData, setQrData] = useState(null)
-  const [sizeError, setSizeError] = useState('')
+  const [error, setError] = useState('')
   const [warning, setWarning] = useState('')
   const [debugLog, setDebugLog] = useState([])
 
@@ -68,7 +68,7 @@ export default function QRCodeModal({ onClose }) {
   }
 
   async function handleGenerate() {
-    setSizeError('')
+    setError('')
     setWarning('')
     setDebugLog([])
     const log = (msg) => setDebugLog(prev => [...prev, msg])
@@ -138,7 +138,7 @@ export default function QRCodeModal({ onClose }) {
     } catch (err) {
       const msg = `EXCEÇÃO: ${err.name}: ${err.message}`
       setDebugLog(prev => [...prev, msg])
-      setSizeError(`Erro ao gerar: ${err.message || String(err)}`)
+      setError(`Erro ao gerar: ${err.message || String(err)}`)
       console.error('QRCodeModal.handleGenerate:', err)
     }
   }
@@ -221,7 +221,7 @@ export default function QRCodeModal({ onClose }) {
                 <button
                   key={key}
                   className={`option-btn ${exportType === key ? 'active' : ''}`}
-                  onClick={() => { setExportType(key); setSizeError(''); setWarning('') }}
+                  onClick={() => { setExportType(key); setError(''); setWarning('') }}
                 >
                   {label}
                 </button>
@@ -238,17 +238,23 @@ export default function QRCodeModal({ onClose }) {
               />
             )}
 
-            {sizeError && <p className="modal-error">{sizeError}</p>}
-
             <button className="modal-generate-btn" onClick={handleGenerate}>
               Gerar QR Code
             </button>
 
-            {debugLog.length > 0 && (
-              <div style={{ marginTop: 8, padding: '8px 10px', background: '#111', borderRadius: 6, fontSize: 11, color: '#0f0', fontFamily: 'monospace', textAlign: 'left', maxHeight: 200, overflowY: 'auto' }}>
-                {debugLog.map((line, i) => (
-                  <div key={i}>{line}</div>
-                ))}
+            {error && (
+              <div className="error-modal">
+                <p className="error-message">{error}</p>
+                {debugLog.length > 0 && (
+                  <div style={{ marginTop: 8, padding: '8px 10px', background: '#111', borderRadius: 6, fontSize: 11, color: '#0f0', fontFamily: 'monospace', textAlign: 'left', maxHeight: 200, overflowY: 'auto' }}>
+                    {debugLog.map((line, i) => (
+                      <div key={i}>{line}</div>
+                    ))}
+                  </div>
+                )}
+                <button className="modal-action-btn secondary" style={{ marginTop: 8 }} onClick={() => setError('')}>
+                  Fechar
+                </button>
               </div>
             )}
 
