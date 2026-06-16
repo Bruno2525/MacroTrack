@@ -3,7 +3,7 @@ import { QRCodeSVG } from 'qrcode.react'
 import * as LZString from 'lz-string'
 import { getAllDays, getGoals, getFavorites, getPlates, getProfile, dateToStr } from '../storage'
 
-const MAX_QR_CHARS = 4000
+const MAX_QR_CHARS = 2800
 
 const MEAL_ABBR = {
   'Café da manhã': 'C', 'Almoço': 'A', 'Lanche': 'L', 'Jantar': 'J', 'Suplemento': 'S',
@@ -18,7 +18,7 @@ function compactDays(days) {
       c: Math.round(item.carb),
       f: Math.round(item.fat),
       k: Math.round(item.cal),
-      m: MEAL_ABBR[item.meal] ?? item.meal.slice(0, 1),
+      m: MEAL_ABBR[item.meal] ?? (item.meal ? item.meal.slice(0, 1) : '?'),
     }))
   }
   return result

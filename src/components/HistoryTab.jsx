@@ -110,7 +110,7 @@ export default function HistoryTab({ goals }) {
                 <button className="modal-close" onClick={() => setShowQRModal(false)}>✕</button>
               </div>
               <p className="modal-error" style={{ textAlign: 'left' }}>
-                Não foi possível gerar o QR Code. Use "Exportar backup" para salvar seus dados.
+                Erro inesperado ao renderizar o QR Code. Tente novamente.
               </p>
               <button className="modal-action-btn secondary" onClick={() => setShowQRModal(false)}>
                 Fechar
